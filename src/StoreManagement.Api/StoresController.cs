@@ -66,8 +66,15 @@ public class StoresController : ControllerBase
     }
 
     [HttpDelete("{storeId}")]
-    public Task<IActionResult> Delete(Guid storeId)
+    public async Task<IActionResult> Delete(Guid storeId)
     {
-        throw new NotImplementedException();
+        var companyId = Guid.Parse(User.FindFirstValue("companyId")!);
+
+        var deleted = await _storeService.DeleteAsync(storeId, companyId);
+
+        if (!deleted)
+            return NotFound();
+
+        return NoContent();
     }
 }
