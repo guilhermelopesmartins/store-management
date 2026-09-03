@@ -40,8 +40,22 @@ public sealed class StoreService : IStoreService
         };
     }
 
-    public Task<StoreResponseDto?> GetByIdAsync(Guid storeId, Guid companyId)
+    public async Task<StoreResponseDto?> GetByIdAsync(Guid storeId, Guid companyId)
     {
-        throw new NotImplementedException();
+        var store = await _storeRepository.GetByIdAsync(storeId, companyId);
+
+        if (store is null)
+            return null;
+
+        return new StoreResponseDto
+        {
+            Id = store.Id,
+            CompanyId = store.CompanyId,
+            Name = store.Name,
+            Address = store.Address,
+            Country = store.Country,
+            Timezone = store.Timezone,
+            IsActive = store.IsActive
+        };
     }
 }
