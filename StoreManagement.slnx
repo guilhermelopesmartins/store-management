@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="docker-compose.yml" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/StoreManagement.Api/StoreManagement.Api.csproj" />
     <Project Path="src/StoreManagement.Application/StoreManagement.Application.csproj" />
