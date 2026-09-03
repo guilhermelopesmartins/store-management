@@ -103,8 +103,15 @@ public sealed class StoreService : IStoreService
         };
     }
 
-    public Task<bool> DeleteAsync(Guid storeId, Guid companyId)
+    public async Task<bool> DeleteAsync(Guid storeId, Guid companyId)
     {
-        throw new NotImplementedException();
+        var store = await _storeRepository.GetByIdAsync(storeId, companyId);
+
+        if (store is null)
+            return false;
+
+        await _storeRepository.DeleteAsync(store);
+
+        return true;
     }
 }
