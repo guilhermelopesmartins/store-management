@@ -41,4 +41,10 @@ public class StoresController : ControllerBase
 
         return Ok(store);
     }
+
+    [HttpGet]
+    public Task<IActionResult> GetAll()
+    {
+        throw new NotImplementedException();
+    }
 }

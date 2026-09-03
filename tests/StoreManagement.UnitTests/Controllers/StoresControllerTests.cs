@@ -92,4 +92,26 @@ public class StoresControllerTests
 
         result.Should().BeOfType<NotFoundResult>();
     }
+
+    [Fact]
+    public async Task GetAll_ShouldReturnOkWithStores()
+    {
+        var companyId = Guid.NewGuid();
+
+        var stores = new List<StoreResponseDto>
+    {
+        new() { Id = Guid.NewGuid(), CompanyId = companyId, Name = "Loja A", IsActive = true }
+    };
+
+        _storeServiceMock
+            .Setup(s => s.GetAllAsync(companyId))
+            .ReturnsAsync(stores);
+
+        _sut.SetCompanyIdClaim(companyId);
+
+        var result = await _sut.GetAll();
+
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().Be(stores);
+    }
 }
