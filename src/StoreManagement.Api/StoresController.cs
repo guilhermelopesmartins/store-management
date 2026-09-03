@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StoreManagement.Application.DTOs;
 using StoreManagement.Application.Services;
+using System.Security.Claims;
 
 namespace StoreManagement.Api.Controllers;
 
@@ -16,8 +17,15 @@ public class StoresController : ControllerBase
     }
 
     [HttpPost]
-    public Task<IActionResult> CreateStore(CreateStoreDto dto)
+    public async Task<IActionResult> CreateStore(CreateStoreDto dto)
     {
-        throw new NotImplementedException();
+        var companyId = Guid.Parse(User.FindFirstValue("companyId")!);
+
+        var created = await _storeService.CreateStoreAsync(companyId, dto);
+
+        return CreatedAtAction(
+            nameof(CreateStore),
+            new { id = created.Id },
+            created);
     }
 }
