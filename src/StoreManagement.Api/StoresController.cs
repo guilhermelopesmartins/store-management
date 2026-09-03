@@ -43,8 +43,12 @@ public class StoresController : ControllerBase
     }
 
     [HttpGet]
-    public Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll()
     {
-        throw new NotImplementedException();
+        var companyId = Guid.Parse(User.FindFirstValue("companyId")!);
+
+        var stores = await _storeService.GetAllAsync(companyId);
+
+        return Ok(stores);
     }
 }
