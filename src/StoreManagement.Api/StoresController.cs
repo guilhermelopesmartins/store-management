@@ -30,8 +30,15 @@ public class StoresController : ControllerBase
     }
 
     [HttpGet("{storeId}")]
-    public Task<IActionResult> GetById(Guid storeId)
+    public async Task<IActionResult> GetById(Guid storeId)
     {
-        throw new NotImplementedException();
+        var companyId = Guid.Parse(User.FindFirstValue("companyId")!);
+
+        var store = await _storeService.GetByIdAsync(storeId, companyId);
+
+        if (store is null)
+            return NotFound();
+
+        return Ok(store);
     }
 }
