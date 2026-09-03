@@ -102,4 +102,9 @@ public sealed class StoreService : IStoreService
             IsActive = store.IsActive
         };
     }
+
+    public Task<bool> DeleteAsync(Guid storeId, Guid companyId)
+    {
+        throw new NotImplementedException();
+    }
 }

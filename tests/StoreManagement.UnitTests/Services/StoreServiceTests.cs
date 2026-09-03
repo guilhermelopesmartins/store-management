@@ -195,4 +195,54 @@ public class StoreServiceTests
         result.Should().BeNull();
         _storeRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Store>()), Times.Never);
     }
+
+    [Fact]
+    public async Task Delete_ShouldReturnTrue_WhenStoreExistsAndBelongsToCompany()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        var existingStore = new Store
+        {
+            Id = storeId,
+            CompanyId = companyId,
+            Name = "Loja Centro",
+            IsActive = true
+        };
+
+        _storeRepositoryMock
+            .Setup(r => r.GetByIdAsync(storeId, companyId))
+            .ReturnsAsync(existingStore);
+
+        _storeRepositoryMock
+            .Setup(r => r.DeleteAsync(existingStore))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _sut.DeleteAsync(storeId, companyId);
+
+        // Assert
+        result.Should().BeTrue();
+        _storeRepositoryMock.Verify(r => r.DeleteAsync(existingStore), Times.Once);
+    }
+
+    [Fact]
+    public async Task Delete_ShouldReturnFalse_WhenStoreDoesNotExist()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        _storeRepositoryMock
+            .Setup(r => r.GetByIdAsync(storeId, companyId))
+            .ReturnsAsync((Store?)null);
+
+        // Act
+        var result = await _sut.DeleteAsync(storeId, companyId);
+
+        // Assert
+        result.Should().BeFalse();
+        _storeRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Store>()), Times.Never);
+    }
 }
