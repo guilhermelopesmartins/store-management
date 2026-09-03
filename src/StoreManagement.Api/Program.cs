@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 using StoreManagement.Application.Services;
 using StoreManagement.Domain.Repositories;
 using StoreManagement.Infrastructure.Persistence;
@@ -24,6 +25,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
