@@ -53,8 +53,15 @@ public class StoresController : ControllerBase
     }
 
     [HttpPut("{storeId}")]
-    public Task<IActionResult> Update(Guid storeId, UpdateStoreDto dto)
+    public async Task<IActionResult> Update(Guid storeId, UpdateStoreDto dto)
     {
-        throw new NotImplementedException();
+        var companyId = Guid.Parse(User.FindFirstValue("companyId")!);
+
+        var updated = await _storeService.UpdateAsync(storeId, companyId, dto);
+
+        if (updated is null)
+            return NotFound();
+
+        return Ok(updated);
     }
 }
