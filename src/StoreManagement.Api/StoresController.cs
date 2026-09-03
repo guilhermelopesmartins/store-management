@@ -51,4 +51,10 @@ public class StoresController : ControllerBase
 
         return Ok(stores);
     }
+
+    [HttpPut("{storeId}")]
+    public Task<IActionResult> Update(Guid storeId, UpdateStoreDto dto)
+    {
+        throw new NotImplementedException();
+    }
 }

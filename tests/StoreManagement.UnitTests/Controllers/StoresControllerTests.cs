@@ -114,4 +114,51 @@ public class StoresControllerTests
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().Be(stores);
     }
+
+    [Fact]
+    public async Task Update_ShouldReturnOk_WhenStoreExists()
+    {
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        var dto = new UpdateStoreDto { Name = "Loja Nova", IsActive = true };
+
+        var expectedResponse = new StoreResponseDto
+        {
+            Id = storeId,
+            CompanyId = companyId,
+            Name = dto.Name,
+            IsActive = true
+        };
+
+        _storeServiceMock
+            .Setup(s => s.UpdateAsync(storeId, companyId, dto))
+            .ReturnsAsync(expectedResponse);
+
+        _sut.SetCompanyIdClaim(companyId);
+
+        var result = await _sut.Update(storeId, dto);
+
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().Be(expectedResponse);
+    }
+
+    [Fact]
+    public async Task Update_ShouldReturnNotFound_WhenStoreDoesNotExist()
+    {
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        var dto = new UpdateStoreDto { Name = "Loja Nova", IsActive = true };
+
+        _storeServiceMock
+            .Setup(s => s.UpdateAsync(storeId, companyId, dto))
+            .ReturnsAsync((StoreResponseDto?)null);
+
+        _sut.SetCompanyIdClaim(companyId);
+
+        var result = await _sut.Update(storeId, dto);
+
+        result.Should().BeOfType<NotFoundResult>();
+    }
 }
