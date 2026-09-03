@@ -161,4 +161,38 @@ public class StoresControllerTests
 
         result.Should().BeOfType<NotFoundResult>();
     }
+
+    [Fact]
+    public async Task Delete_ShouldReturnNoContent_WhenStoreExists()
+    {
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        _storeServiceMock
+            .Setup(s => s.DeleteAsync(storeId, companyId))
+            .ReturnsAsync(true);
+
+        _sut.SetCompanyIdClaim(companyId);
+
+        var result = await _sut.Delete(storeId);
+
+        result.Should().BeOfType<NoContentResult>();
+    }
+
+    [Fact]
+    public async Task Delete_ShouldReturnNotFound_WhenStoreDoesNotExist()
+    {
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        _storeServiceMock
+            .Setup(s => s.DeleteAsync(storeId, companyId))
+            .ReturnsAsync(false);
+
+        _sut.SetCompanyIdClaim(companyId);
+
+        var result = await _sut.Delete(storeId);
+
+        result.Should().BeOfType<NotFoundResult>();
+    }
 }

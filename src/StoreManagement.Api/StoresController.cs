@@ -64,4 +64,10 @@ public class StoresController : ControllerBase
 
         return Ok(updated);
     }
+
+    [HttpDelete("{storeId}")]
+    public Task<IActionResult> Delete(Guid storeId)
+    {
+        throw new NotImplementedException();
+    }
 }
