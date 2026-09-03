@@ -133,4 +133,66 @@ public class StoreServiceTests
         // Assert
         result.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task Update_ShouldReturnUpdatedStore_WhenStoreExistsAndBelongsToCompany()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        var existingStore = new Store
+        {
+            Id = storeId,
+            CompanyId = companyId,
+            Name = "Loja Antiga",
+            IsActive = true
+        };
+
+        var dto = new UpdateStoreDto
+        {
+            Name = "Loja Nova",
+            Country = "BR",
+            IsActive = true
+        };
+
+        _storeRepositoryMock
+            .Setup(r => r.GetByIdAsync(storeId, companyId))
+            .ReturnsAsync(existingStore);
+
+        _storeRepositoryMock
+            .Setup(r => r.UpdateAsync(It.IsAny<Store>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _sut.UpdateAsync(storeId, companyId, dto);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Name.Should().Be(dto.Name);
+        result.Country.Should().Be(dto.Country);
+
+        _storeRepositoryMock.Verify(r => r.UpdateAsync(It.Is<Store>(s => s.Name == dto.Name)), Times.Once);
+    }
+
+    [Fact]
+    public async Task Update_ShouldReturnNull_WhenStoreDoesNotExist()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        var dto = new UpdateStoreDto { Name = "Loja Nova", IsActive = true };
+
+        _storeRepositoryMock
+            .Setup(r => r.GetByIdAsync(storeId, companyId))
+            .ReturnsAsync((Store?)null);
+
+        // Act
+        var result = await _sut.UpdateAsync(storeId, companyId, dto);
+
+        // Assert
+        result.Should().BeNull();
+        _storeRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Store>()), Times.Never);
+    }
 }

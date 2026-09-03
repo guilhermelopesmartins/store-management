@@ -74,4 +74,9 @@ public sealed class StoreService : IStoreService
             IsActive = store.IsActive
         });
     }
+
+    public Task<StoreResponseDto?> UpdateAsync(Guid storeId, Guid companyId, UpdateStoreDto dto)
+    {
+        throw new NotImplementedException();
+    }
 }
