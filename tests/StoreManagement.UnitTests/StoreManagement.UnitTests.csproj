@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\StoreManagement.Application\StoreManagement.Application.csproj" />
     <ProjectReference Include="..\..\src\StoreManagement.Domain\StoreManagement.Domain.csproj" />
+    <ProjectReference Include="..\..\src\StoreManagement.Api\StoreManagement.Api.csproj" />
   </ItemGroup>
 
 </Project>
