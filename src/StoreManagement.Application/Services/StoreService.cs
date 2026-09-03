@@ -39,4 +39,9 @@ public sealed class StoreService : IStoreService
             IsActive = created.IsActive
         };
     }
+
+    public Task<StoreResponseDto?> GetByIdAsync(Guid storeId, Guid companyId)
+    {
+        throw new NotImplementedException();
+    }
 }
