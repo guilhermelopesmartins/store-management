@@ -58,4 +58,9 @@ public sealed class StoreService : IStoreService
             IsActive = store.IsActive
         };
     }
+
+    public Task<IEnumerable<StoreResponseDto>> GetAllAsync(Guid companyId)
+    {
+        throw new NotImplementedException();
+    }
 }

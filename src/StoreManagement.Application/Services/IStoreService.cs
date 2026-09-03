@@ -10,4 +10,5 @@ public interface IStoreService
 {
     Task<StoreResponseDto> CreateStoreAsync(Guid companyId, CreateStoreDto dto);
     Task<StoreResponseDto?> GetByIdAsync(Guid storeId, Guid companyId);
+    Task<IEnumerable<StoreResponseDto>> GetAllAsync(Guid companyId);
 }

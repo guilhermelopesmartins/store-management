@@ -24,8 +24,8 @@ public class StoresController : ControllerBase
         var created = await _storeService.CreateStoreAsync(companyId, dto);
 
         return CreatedAtAction(
-            nameof(CreateStore),
-            new { id = created.Id },
+            nameof(GetById),
+            new { storeId = created.Id },
             created);
     }
 

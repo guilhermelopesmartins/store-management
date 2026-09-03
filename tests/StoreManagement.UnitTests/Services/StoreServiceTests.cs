@@ -93,4 +93,44 @@ public class StoreServiceTests
         // Assert
         result.Should().BeNull();
     }
+    [Fact]
+    public async Task GetAll_ShouldReturnOnlyStoresBelongingToCompany()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+
+        var stores = new List<Store>
+    {
+        new() { Id = Guid.NewGuid(), CompanyId = companyId, Name = "Loja A", IsActive = true },
+        new() { Id = Guid.NewGuid(), CompanyId = companyId, Name = "Loja B", IsActive = true }
+    };
+
+        _storeRepositoryMock
+            .Setup(r => r.GetAllAsync(companyId))
+            .ReturnsAsync(stores);
+
+        // Act
+        var result = await _sut.GetAllAsync(companyId);
+
+        // Assert
+        result.Should().HaveCount(2);
+        result.Should().OnlyContain(s => s.CompanyId == companyId);
+    }
+
+    [Fact]
+    public async Task GetAll_ShouldReturnEmpty_WhenCompanyHasNoStores()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+
+        _storeRepositoryMock
+            .Setup(r => r.GetAllAsync(companyId))
+            .ReturnsAsync(new List<Store>());
+
+        // Act
+        var result = await _sut.GetAllAsync(companyId);
+
+        // Assert
+        result.Should().BeEmpty();
+    }
 }
