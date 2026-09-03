@@ -30,6 +30,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseMiddleware<StoreManagement.Api.Middlewares.CompanyValidationMiddleware>();
+
 app.MapControllers();
 
 app.Run();
