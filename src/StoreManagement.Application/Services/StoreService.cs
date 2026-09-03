@@ -59,8 +59,19 @@ public sealed class StoreService : IStoreService
         };
     }
 
-    public Task<IEnumerable<StoreResponseDto>> GetAllAsync(Guid companyId)
+    public async Task<IEnumerable<StoreResponseDto>> GetAllAsync(Guid companyId)
     {
-        throw new NotImplementedException();
+        var stores = await _storeRepository.GetAllAsync(companyId);
+
+        return stores.Select(store => new StoreResponseDto
+        {
+            Id = store.Id,
+            CompanyId = store.CompanyId,
+            Name = store.Name,
+            Address = store.Address,
+            Country = store.Country,
+            Timezone = store.Timezone,
+            IsActive = store.IsActive
+        });
     }
 }
