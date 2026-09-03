@@ -28,4 +28,10 @@ public class StoresController : ControllerBase
             new { id = created.Id },
             created);
     }
+
+    [HttpGet("{storeId}")]
+    public Task<IActionResult> GetById(Guid storeId)
+    {
+        throw new NotImplementedException();
+    }
 }

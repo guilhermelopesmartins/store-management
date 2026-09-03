@@ -49,4 +49,47 @@ public class StoresControllerTests
         createdResult.Value.Should().Be(expectedResponse);
         createdResult.StatusCode.Should().Be(201);
     }
+
+    [Fact]
+    public async Task GetById_ShouldReturnOk_WhenStoreExists()
+    {
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        var expectedResponse = new StoreResponseDto
+        {
+            Id = storeId,
+            CompanyId = companyId,
+            Name = "Loja Centro",
+            IsActive = true
+        };
+
+        _storeServiceMock
+            .Setup(s => s.GetByIdAsync(storeId, companyId))
+            .ReturnsAsync(expectedResponse);
+
+        _sut.SetCompanyIdClaim(companyId);
+
+        var result = await _sut.GetById(storeId);
+
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().Be(expectedResponse);
+    }
+
+    [Fact]
+    public async Task GetById_ShouldReturnNotFound_WhenStoreDoesNotExist()
+    {
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        _storeServiceMock
+            .Setup(s => s.GetByIdAsync(storeId, companyId))
+            .ReturnsAsync((StoreResponseDto?)null);
+
+        _sut.SetCompanyIdClaim(companyId);
+
+        var result = await _sut.GetById(storeId);
+
+        result.Should().BeOfType<NotFoundResult>();
+    }
 }
