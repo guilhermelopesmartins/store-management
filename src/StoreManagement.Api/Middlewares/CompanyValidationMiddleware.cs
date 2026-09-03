@@ -1,4 +1,5 @@
-﻿using StoreManagement.Api.Attributes;
+﻿using Microsoft.AspNetCore.Authorization;
+using StoreManagement.Api.Attributes;
 
 namespace StoreManagement.Api.Middlewares;
 
@@ -15,10 +16,13 @@ public class CompanyValidationMiddleware
     {
         var endpoint = context.GetEndpoint();
 
+        var requiresAuthorization =
+            endpoint?.Metadata.GetMetadata<IAuthorizeData>() != null;
+
         var skipValidation =
             endpoint?.Metadata.GetMetadata<SkipCompanyValidationAttribute>() != null;
 
-        if (skipValidation)
+        if (!requiresAuthorization || skipValidation)
         {
             await _next(context);
             return;
