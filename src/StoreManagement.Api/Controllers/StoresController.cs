@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using StoreManagement.Application.DTOs;
 using StoreManagement.Application.Services;
 
@@ -6,6 +7,7 @@ namespace StoreManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/stores")]
+[Authorize]
 public class StoresController : ControllerBase
 {
     private readonly IStoreService _storeService;
