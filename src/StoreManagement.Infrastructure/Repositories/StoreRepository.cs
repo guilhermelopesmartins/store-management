@@ -27,9 +27,17 @@ public class StoreRepository : IStoreRepository
             .FirstOrDefaultAsync(s => s.Id == storeId);
     }
 
+    public async Task<Store?> GetByIdReadOnlyAsync(Guid storeId)
+    {
+        return await _context.Stores
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == storeId);
+    }
+
     public async Task<IEnumerable<Store>> GetAllAsync(Guid companyId)
     {
         return await _context.Stores
+            .AsNoTracking()
             .Where(s => s.CompanyId == companyId)
             .ToListAsync();
     }

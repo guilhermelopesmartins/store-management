@@ -34,7 +34,7 @@ public sealed class StoreService : IStoreService
 
     public async Task<StoreResponseDto> GetByIdAsync(Guid storeId, Guid companyId)
     {
-        var store = await GetOwnedStoreAsync(storeId, companyId);
+        var store = EnsureOwned(await _storeRepository.GetByIdReadOnlyAsync(storeId), storeId, companyId);
 
         return ToDto(store);
     }
@@ -71,8 +71,15 @@ public sealed class StoreService : IStoreService
 
     private async Task<Store> GetOwnedStoreAsync(Guid storeId, Guid companyId)
     {
-        var store = await _storeRepository.GetByIdAsync(storeId)
-            ?? throw new StoreNotFoundException(storeId);
+        var store = await _storeRepository.GetByIdAsync(storeId);
+
+        return EnsureOwned(store, storeId, companyId);
+    }
+
+    private static Store EnsureOwned(Store? store, Guid storeId, Guid companyId)
+    {
+        if (store is null)
+            throw new StoreNotFoundException(storeId);
 
         if (store.CompanyId != companyId)
             throw new StoreAccessDeniedException(storeId, companyId);
