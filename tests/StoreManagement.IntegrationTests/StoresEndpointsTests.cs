@@ -128,4 +128,38 @@ public class StoresEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         problem!.Status.Should().Be((int)HttpStatusCode.Forbidden);
         problem.Title.Should().Be("Access denied");
     }
+
+    [Fact]
+    public async Task Update_ThenGetById_ShouldReturnTheUpdatedStore()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        await AuthenticateAsync(companyId);
+
+        var createResponse = await _client.PostAsJsonAsync("/api/stores", new CreateStoreDto
+        {
+            Name = "Loja Antiga",
+            Country = "BR"
+        });
+        var created = await createResponse.Content.ReadFromJsonAsync<StoreResponseDto>(JsonOptions);
+
+        var updateDto = new UpdateStoreDto
+        {
+            Name = "Loja Nova",
+            Country = "BR",
+            IsActive = false
+        };
+
+        // Act
+        var updateResponse = await _client.PutAsJsonAsync($"/api/stores/{created!.Id}", updateDto);
+        updateResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var getResponse = await _client.GetAsync($"/api/stores/{created.Id}");
+        var fetched = await getResponse.Content.ReadFromJsonAsync<StoreResponseDto>(JsonOptions);
+
+        // Assert
+        fetched.Should().NotBeNull();
+        fetched!.Name.Should().Be(updateDto.Name);
+        fetched.IsActive.Should().BeFalse();
+    }
 }

@@ -64,7 +64,7 @@ public class StoreServiceTests
         };
 
         _storeRepositoryMock
-            .Setup(r => r.GetByIdAsync(storeId))
+            .Setup(r => r.GetByIdReadOnlyAsync(storeId))
             .ReturnsAsync(existingStore);
 
         // Act
@@ -84,7 +84,7 @@ public class StoreServiceTests
         var storeId = Guid.NewGuid();
 
         _storeRepositoryMock
-            .Setup(r => r.GetByIdAsync(storeId))
+            .Setup(r => r.GetByIdReadOnlyAsync(storeId))
             .ReturnsAsync((Store?)null);
 
         // Act
@@ -110,7 +110,7 @@ public class StoreServiceTests
         };
 
         _storeRepositoryMock
-            .Setup(r => r.GetByIdAsync(storeId))
+            .Setup(r => r.GetByIdReadOnlyAsync(storeId))
             .ReturnsAsync(existingStore);
 
         // Act
