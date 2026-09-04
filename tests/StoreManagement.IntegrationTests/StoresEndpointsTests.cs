@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc;
 using StoreManagement.Api.DTOs;
 using StoreManagement.Application.DTOs;
 using StoreManagement.IntegrationTests.Infrastructure;
@@ -79,6 +80,12 @@ public class StoresEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.Content.Headers.ContentType?.MediaType.Should().Be("application/problem+json");
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(JsonOptions);
+        problem.Should().NotBeNull();
+        problem!.Status.Should().Be((int)HttpStatusCode.NotFound);
+        problem.Title.Should().Be("Store not found");
     }
 
     [Fact]
@@ -95,7 +102,7 @@ public class StoresEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task GetById_ShouldReturnNotFound_WhenStoreBelongsToAnotherCompany()
+    public async Task GetById_ShouldReturnForbidden_WhenStoreBelongsToAnotherCompany()
     {
         // Arrange - cria uma store pra company A
         var companyA = Guid.NewGuid();
@@ -113,6 +120,12 @@ public class StoresEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         var getResponse = await _client.GetAsync($"/api/stores/{created!.Id}");
 
         // Assert
-        getResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        getResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        getResponse.Content.Headers.ContentType?.MediaType.Should().Be("application/problem+json");
+
+        var problem = await getResponse.Content.ReadFromJsonAsync<ProblemDetails>(JsonOptions);
+        problem.Should().NotBeNull();
+        problem!.Status.Should().Be((int)HttpStatusCode.Forbidden);
+        problem.Title.Should().Be("Access denied");
     }
 }
