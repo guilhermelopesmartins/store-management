@@ -57,6 +57,9 @@ app.UseAuthorization();
 
 app.UseMiddleware<CompanyValidationMiddleware>();
 
+app.MapOpenApi();
+app.MapScalarApiReference();
+
 app.MapControllers();
 
 app.Run();
