@@ -30,7 +30,7 @@ public class StoresController : ControllerBase
     public async Task<IActionResult> GetById(Guid storeId)
     {
         var store = await _storeService.GetByIdAsync(storeId, CompanyId);
-        return store is null ? NotFound() : Ok(store);
+        return Ok(store);
     }
 
     [HttpGet]
@@ -44,13 +44,13 @@ public class StoresController : ControllerBase
     public async Task<IActionResult> Update(Guid storeId, UpdateStoreDto dto)
     {
         var updated = await _storeService.UpdateAsync(storeId, CompanyId, dto);
-        return updated is null ? NotFound() : Ok(updated);
+        return Ok(updated);
     }
 
     [HttpDelete("{storeId}")]
     public async Task<IActionResult> Delete(Guid storeId)
     {
-        var deleted = await _storeService.DeleteAsync(storeId, CompanyId);
-        return deleted ? NoContent() : NotFound();
+        await _storeService.DeleteAsync(storeId, CompanyId);
+        return NoContent();
     }
 }

@@ -21,10 +21,10 @@ public class StoreRepository : IStoreRepository
         return store;
     }
 
-    public async Task<Store?> GetByIdAsync(Guid storeId, Guid companyId)
+    public async Task<Store?> GetByIdAsync(Guid storeId)
     {
         return await _context.Stores
-            .FirstOrDefaultAsync(s => s.Id == storeId && s.CompanyId == companyId);
+            .FirstOrDefaultAsync(s => s.Id == storeId);
     }
 
     public async Task<IEnumerable<Store>> GetAllAsync(Guid companyId)

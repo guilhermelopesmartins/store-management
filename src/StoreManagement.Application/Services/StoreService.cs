@@ -1,5 +1,6 @@
-﻿using StoreManagement.Application.DTOs;
+using StoreManagement.Application.DTOs;
 using StoreManagement.Domain.Entities;
+using StoreManagement.Domain.Exceptions;
 using StoreManagement.Domain.Repositories;
 
 namespace StoreManagement.Application.Services;
@@ -28,59 +29,26 @@ public sealed class StoreService : IStoreService
 
         var created = await _storeRepository.AddAsync(store);
 
-        return new StoreResponseDto
-        {
-            Id = created.Id,
-            CompanyId = created.CompanyId,
-            Name = created.Name,
-            Address = created.Address,
-            Country = created.Country,
-            Timezone = created.Timezone,
-            IsActive = created.IsActive
-        };
+        return ToDto(created);
     }
 
-    public async Task<StoreResponseDto?> GetByIdAsync(Guid storeId, Guid companyId)
+    public async Task<StoreResponseDto> GetByIdAsync(Guid storeId, Guid companyId)
     {
-        var store = await _storeRepository.GetByIdAsync(storeId, companyId);
+        var store = await GetOwnedStoreAsync(storeId, companyId);
 
-        if (store is null)
-            return null;
-
-        return new StoreResponseDto
-        {
-            Id = store.Id,
-            CompanyId = store.CompanyId,
-            Name = store.Name,
-            Address = store.Address,
-            Country = store.Country,
-            Timezone = store.Timezone,
-            IsActive = store.IsActive
-        };
+        return ToDto(store);
     }
 
     public async Task<IEnumerable<StoreResponseDto>> GetAllAsync(Guid companyId)
     {
         var stores = await _storeRepository.GetAllAsync(companyId);
 
-        return stores.Select(store => new StoreResponseDto
-        {
-            Id = store.Id,
-            CompanyId = store.CompanyId,
-            Name = store.Name,
-            Address = store.Address,
-            Country = store.Country,
-            Timezone = store.Timezone,
-            IsActive = store.IsActive
-        });
+        return stores.Select(ToDto);
     }
 
-    public async Task<StoreResponseDto?> UpdateAsync(Guid storeId, Guid companyId, UpdateStoreDto dto)
+    public async Task<StoreResponseDto> UpdateAsync(Guid storeId, Guid companyId, UpdateStoreDto dto)
     {
-        var store = await _storeRepository.GetByIdAsync(storeId, companyId);
-
-        if (store is null)
-            return null;
+        var store = await GetOwnedStoreAsync(storeId, companyId);
 
         store.Name = dto.Name;
         store.Address = dto.Address;
@@ -91,27 +59,35 @@ public sealed class StoreService : IStoreService
 
         await _storeRepository.UpdateAsync(store);
 
-        return new StoreResponseDto
-        {
-            Id = store.Id,
-            CompanyId = store.CompanyId,
-            Name = store.Name,
-            Address = store.Address,
-            Country = store.Country,
-            Timezone = store.Timezone,
-            IsActive = store.IsActive
-        };
+        return ToDto(store);
     }
 
-    public async Task<bool> DeleteAsync(Guid storeId, Guid companyId)
+    public async Task DeleteAsync(Guid storeId, Guid companyId)
     {
-        var store = await _storeRepository.GetByIdAsync(storeId, companyId);
-
-        if (store is null)
-            return false;
+        var store = await GetOwnedStoreAsync(storeId, companyId);
 
         await _storeRepository.DeleteAsync(store);
-
-        return true;
     }
+
+    private async Task<Store> GetOwnedStoreAsync(Guid storeId, Guid companyId)
+    {
+        var store = await _storeRepository.GetByIdAsync(storeId)
+            ?? throw new StoreNotFoundException(storeId);
+
+        if (store.CompanyId != companyId)
+            throw new StoreAccessDeniedException(storeId, companyId);
+
+        return store;
+    }
+
+    private static StoreResponseDto ToDto(Store store) => new()
+    {
+        Id = store.Id,
+        CompanyId = store.CompanyId,
+        Name = store.Name,
+        Address = store.Address,
+        Country = store.Country,
+        Timezone = store.Timezone,
+        IsActive = store.IsActive
+    };
 }
