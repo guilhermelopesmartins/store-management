@@ -1,0 +1,63 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  azureSubscription: 'azure-student-connection'
+  webAppName: 'app-storemanagement-<seu-sufixo-unico>'
+  apiProjectPath: 'src/StoreManagement.Api/StoreManagement.Api.csproj'
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildAndTest
+        steps:
+          - task: UseDotNet@2
+            inputs:
+              packageType: 'sdk'
+              version: '10.0.x'
+
+          - script: dotnet restore StoreManagement.slnx
+            displayName: 'Restore'
+
+          - script: dotnet build StoreManagement.slnx --configuration $(buildConfiguration) --no-restore
+            displayName: 'Build'
+
+          - script: dotnet test tests/StoreManagement.UnitTests --configuration $(buildConfiguration) --no-build
+            displayName: 'Run Unit Tests'
+
+          - script: dotnet test tests/StoreManagement.IntegrationTests --configuration $(buildConfiguration) --no-build
+            displayName: 'Run Integration Tests'
+
+          - script: dotnet publish $(apiProjectPath) --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)/publish
+            displayName: 'Publish'
+
+          - publish: $(Build.ArtifactStagingDirectory)/publish
+            artifact: drop
+
+  - stage: Deploy
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: DeployToAzure
+        environment: 'production'
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: drop
+
+                - task: AzureWebApp@1
+                  inputs:
+                    azureSubscription: '$(azureSubscription)'
+                    appType: 'webAppLinux'
+                    appName: '$(webAppName)'
+                    package: '$(Pipeline.Workspace)/drop'
