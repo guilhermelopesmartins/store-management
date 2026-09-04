@@ -1,9 +1,10 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using StoreManagement.Api.Controllers;
 using StoreManagement.Application.DTOs;
 using StoreManagement.Application.Services;
+using StoreManagement.Domain.Exceptions;
 using Xunit;
 
 namespace StoreManagement.UnitTests.Controllers;
@@ -77,20 +78,37 @@ public class StoresControllerTests
     }
 
     [Fact]
-    public async Task GetById_ShouldReturnNotFound_WhenStoreDoesNotExist()
+    public async Task GetById_ShouldPropagateStoreNotFoundException_WhenStoreDoesNotExist()
     {
         var companyId = Guid.NewGuid();
         var storeId = Guid.NewGuid();
 
         _storeServiceMock
             .Setup(s => s.GetByIdAsync(storeId, companyId))
-            .ReturnsAsync((StoreResponseDto?)null);
+            .ThrowsAsync(new StoreNotFoundException(storeId));
 
         _sut.SetCompanyIdClaim(companyId);
 
-        var result = await _sut.GetById(storeId);
+        var act = async () => await _sut.GetById(storeId);
 
-        result.Should().BeOfType<NotFoundResult>();
+        await act.Should().ThrowAsync<StoreNotFoundException>();
+    }
+
+    [Fact]
+    public async Task GetById_ShouldPropagateStoreAccessDeniedException_WhenStoreBelongsToAnotherCompany()
+    {
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        _storeServiceMock
+            .Setup(s => s.GetByIdAsync(storeId, companyId))
+            .ThrowsAsync(new StoreAccessDeniedException(storeId, companyId));
+
+        _sut.SetCompanyIdClaim(companyId);
+
+        var act = async () => await _sut.GetById(storeId);
+
+        await act.Should().ThrowAsync<StoreAccessDeniedException>();
     }
 
     [Fact]
@@ -144,7 +162,7 @@ public class StoresControllerTests
     }
 
     [Fact]
-    public async Task Update_ShouldReturnNotFound_WhenStoreDoesNotExist()
+    public async Task Update_ShouldPropagateStoreNotFoundException_WhenStoreDoesNotExist()
     {
         var companyId = Guid.NewGuid();
         var storeId = Guid.NewGuid();
@@ -153,13 +171,32 @@ public class StoresControllerTests
 
         _storeServiceMock
             .Setup(s => s.UpdateAsync(storeId, companyId, dto))
-            .ReturnsAsync((StoreResponseDto?)null);
+            .ThrowsAsync(new StoreNotFoundException(storeId));
 
         _sut.SetCompanyIdClaim(companyId);
 
-        var result = await _sut.Update(storeId, dto);
+        var act = async () => await _sut.Update(storeId, dto);
 
-        result.Should().BeOfType<NotFoundResult>();
+        await act.Should().ThrowAsync<StoreNotFoundException>();
+    }
+
+    [Fact]
+    public async Task Update_ShouldPropagateStoreAccessDeniedException_WhenStoreBelongsToAnotherCompany()
+    {
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        var dto = new UpdateStoreDto { Name = "Loja Nova", IsActive = true };
+
+        _storeServiceMock
+            .Setup(s => s.UpdateAsync(storeId, companyId, dto))
+            .ThrowsAsync(new StoreAccessDeniedException(storeId, companyId));
+
+        _sut.SetCompanyIdClaim(companyId);
+
+        var act = async () => await _sut.Update(storeId, dto);
+
+        await act.Should().ThrowAsync<StoreAccessDeniedException>();
     }
 
     [Fact]
@@ -170,7 +207,7 @@ public class StoresControllerTests
 
         _storeServiceMock
             .Setup(s => s.DeleteAsync(storeId, companyId))
-            .ReturnsAsync(true);
+            .Returns(Task.CompletedTask);
 
         _sut.SetCompanyIdClaim(companyId);
 
@@ -180,19 +217,36 @@ public class StoresControllerTests
     }
 
     [Fact]
-    public async Task Delete_ShouldReturnNotFound_WhenStoreDoesNotExist()
+    public async Task Delete_ShouldPropagateStoreNotFoundException_WhenStoreDoesNotExist()
     {
         var companyId = Guid.NewGuid();
         var storeId = Guid.NewGuid();
 
         _storeServiceMock
             .Setup(s => s.DeleteAsync(storeId, companyId))
-            .ReturnsAsync(false);
+            .ThrowsAsync(new StoreNotFoundException(storeId));
 
         _sut.SetCompanyIdClaim(companyId);
 
-        var result = await _sut.Delete(storeId);
+        var act = async () => await _sut.Delete(storeId);
 
-        result.Should().BeOfType<NotFoundResult>();
+        await act.Should().ThrowAsync<StoreNotFoundException>();
+    }
+
+    [Fact]
+    public async Task Delete_ShouldPropagateStoreAccessDeniedException_WhenStoreBelongsToAnotherCompany()
+    {
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        _storeServiceMock
+            .Setup(s => s.DeleteAsync(storeId, companyId))
+            .ThrowsAsync(new StoreAccessDeniedException(storeId, companyId));
+
+        _sut.SetCompanyIdClaim(companyId);
+
+        var act = async () => await _sut.Delete(storeId);
+
+        await act.Should().ThrowAsync<StoreAccessDeniedException>();
     }
 }

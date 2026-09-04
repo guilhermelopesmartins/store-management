@@ -1,10 +1,10 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Moq;
 using StoreManagement.Application.DTOs;
 using StoreManagement.Application.Services;
 using StoreManagement.Domain.Entities;
+using StoreManagement.Domain.Exceptions;
 using StoreManagement.Domain.Repositories;
-using System.Timers;
 using Xunit;
 
 namespace StoreManagement.UnitTests.Services;
@@ -64,7 +64,7 @@ public class StoreServiceTests
         };
 
         _storeRepositoryMock
-            .Setup(r => r.GetByIdAsync(storeId, companyId))
+            .Setup(r => r.GetByIdAsync(storeId))
             .ReturnsAsync(existingStore);
 
         // Act
@@ -72,27 +72,54 @@ public class StoreServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Id.Should().Be(storeId);
+        result.Id.Should().Be(storeId);
         result.Name.Should().Be(existingStore.Name);
     }
 
     [Fact]
-    public async Task GetById_ShouldReturnNull_WhenStoreDoesNotExist()
+    public async Task GetById_ShouldThrowStoreNotFoundException_WhenStoreDoesNotExist()
     {
         // Arrange
         var companyId = Guid.NewGuid();
         var storeId = Guid.NewGuid();
 
         _storeRepositoryMock
-            .Setup(r => r.GetByIdAsync(storeId, companyId))
+            .Setup(r => r.GetByIdAsync(storeId))
             .ReturnsAsync((Store?)null);
 
         // Act
-        var result = await _sut.GetByIdAsync(storeId, companyId);
+        var act = async () => await _sut.GetByIdAsync(storeId, companyId);
 
         // Assert
-        result.Should().BeNull();
+        await act.Should().ThrowAsync<StoreNotFoundException>();
     }
+
+    [Fact]
+    public async Task GetById_ShouldThrowStoreAccessDeniedException_WhenStoreBelongsToAnotherCompany()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        var existingStore = new Store
+        {
+            Id = storeId,
+            CompanyId = Guid.NewGuid(),
+            Name = "Loja Centro",
+            IsActive = true
+        };
+
+        _storeRepositoryMock
+            .Setup(r => r.GetByIdAsync(storeId))
+            .ReturnsAsync(existingStore);
+
+        // Act
+        var act = async () => await _sut.GetByIdAsync(storeId, companyId);
+
+        // Assert
+        await act.Should().ThrowAsync<StoreAccessDeniedException>();
+    }
+
     [Fact]
     public async Task GetAll_ShouldReturnOnlyStoresBelongingToCompany()
     {
@@ -157,7 +184,7 @@ public class StoreServiceTests
         };
 
         _storeRepositoryMock
-            .Setup(r => r.GetByIdAsync(storeId, companyId))
+            .Setup(r => r.GetByIdAsync(storeId))
             .ReturnsAsync(existingStore);
 
         _storeRepositoryMock
@@ -169,14 +196,14 @@ public class StoreServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        result!.Name.Should().Be(dto.Name);
+        result.Name.Should().Be(dto.Name);
         result.Country.Should().Be(dto.Country);
 
         _storeRepositoryMock.Verify(r => r.UpdateAsync(It.Is<Store>(s => s.Name == dto.Name)), Times.Once);
     }
 
     [Fact]
-    public async Task Update_ShouldReturnNull_WhenStoreDoesNotExist()
+    public async Task Update_ShouldThrowStoreNotFoundException_WhenStoreDoesNotExist()
     {
         // Arrange
         var companyId = Guid.NewGuid();
@@ -185,19 +212,48 @@ public class StoreServiceTests
         var dto = new UpdateStoreDto { Name = "Loja Nova", IsActive = true };
 
         _storeRepositoryMock
-            .Setup(r => r.GetByIdAsync(storeId, companyId))
+            .Setup(r => r.GetByIdAsync(storeId))
             .ReturnsAsync((Store?)null);
 
         // Act
-        var result = await _sut.UpdateAsync(storeId, companyId, dto);
+        var act = async () => await _sut.UpdateAsync(storeId, companyId, dto);
 
         // Assert
-        result.Should().BeNull();
+        await act.Should().ThrowAsync<StoreNotFoundException>();
         _storeRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Store>()), Times.Never);
     }
 
     [Fact]
-    public async Task Delete_ShouldReturnTrue_WhenStoreExistsAndBelongsToCompany()
+    public async Task Update_ShouldThrowStoreAccessDeniedException_WhenStoreBelongsToAnotherCompany()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        var existingStore = new Store
+        {
+            Id = storeId,
+            CompanyId = Guid.NewGuid(),
+            Name = "Loja Antiga",
+            IsActive = true
+        };
+
+        var dto = new UpdateStoreDto { Name = "Loja Nova", IsActive = true };
+
+        _storeRepositoryMock
+            .Setup(r => r.GetByIdAsync(storeId))
+            .ReturnsAsync(existingStore);
+
+        // Act
+        var act = async () => await _sut.UpdateAsync(storeId, companyId, dto);
+
+        // Assert
+        await act.Should().ThrowAsync<StoreAccessDeniedException>();
+        _storeRepositoryMock.Verify(r => r.UpdateAsync(It.IsAny<Store>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Delete_ShouldCallRepositoryDelete_WhenStoreExistsAndBelongsToCompany()
     {
         // Arrange
         var companyId = Guid.NewGuid();
@@ -212,7 +268,7 @@ public class StoreServiceTests
         };
 
         _storeRepositoryMock
-            .Setup(r => r.GetByIdAsync(storeId, companyId))
+            .Setup(r => r.GetByIdAsync(storeId))
             .ReturnsAsync(existingStore);
 
         _storeRepositoryMock
@@ -220,29 +276,55 @@ public class StoreServiceTests
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _sut.DeleteAsync(storeId, companyId);
+        await _sut.DeleteAsync(storeId, companyId);
 
         // Assert
-        result.Should().BeTrue();
         _storeRepositoryMock.Verify(r => r.DeleteAsync(existingStore), Times.Once);
     }
 
     [Fact]
-    public async Task Delete_ShouldReturnFalse_WhenStoreDoesNotExist()
+    public async Task Delete_ShouldThrowStoreNotFoundException_WhenStoreDoesNotExist()
     {
         // Arrange
         var companyId = Guid.NewGuid();
         var storeId = Guid.NewGuid();
 
         _storeRepositoryMock
-            .Setup(r => r.GetByIdAsync(storeId, companyId))
+            .Setup(r => r.GetByIdAsync(storeId))
             .ReturnsAsync((Store?)null);
 
         // Act
-        var result = await _sut.DeleteAsync(storeId, companyId);
+        var act = async () => await _sut.DeleteAsync(storeId, companyId);
 
         // Assert
-        result.Should().BeFalse();
+        await act.Should().ThrowAsync<StoreNotFoundException>();
+        _storeRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Store>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Delete_ShouldThrowStoreAccessDeniedException_WhenStoreBelongsToAnotherCompany()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        var storeId = Guid.NewGuid();
+
+        var existingStore = new Store
+        {
+            Id = storeId,
+            CompanyId = Guid.NewGuid(),
+            Name = "Loja Centro",
+            IsActive = true
+        };
+
+        _storeRepositoryMock
+            .Setup(r => r.GetByIdAsync(storeId))
+            .ReturnsAsync(existingStore);
+
+        // Act
+        var act = async () => await _sut.DeleteAsync(storeId, companyId);
+
+        // Assert
+        await act.Should().ThrowAsync<StoreAccessDeniedException>();
         _storeRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Store>()), Times.Never);
     }
 }
