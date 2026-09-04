@@ -9,7 +9,7 @@ pool:
 variables:
   buildConfiguration: 'Release'
   azureSubscription: 'azure-student-connection'
-  webAppName: 'app-storemanagement-<seu-sufixo-unico>'
+  webAppName: 'app-storemanagement-guilhermehiringprocess123'
   apiProjectPath: 'src/StoreManagement.Api/StoreManagement.Api.csproj'
 
 stages:
